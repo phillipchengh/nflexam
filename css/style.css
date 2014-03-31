@@ -1,0 +1,529 @@
+div.bar {
+	display: inline-block;
+	width: 20px;
+	height: 75px;	/* Gets overriden by D3-assigned height below */
+	background-color: teal;
+}
+
+body {
+	background-color: #EEEEEE;
+	font-family: 'Segoe UI', 'Gotham Rounded A', sans-serif;
+}
+
+#content-container {
+	position: absolute;
+	width: 100%;
+}
+
+#d3-content {
+	opacity: 1;
+	position: absolute;
+	margin: 0px auto;
+	left: 0;
+	right: 0;
+	z-index: 0;
+}
+
+.error {
+	text-align: center;
+	font-size: 72px;
+}
+
+#cats-content {
+	position: absolute;
+	margin: 0 auto;
+	left: 0;
+	right: 0;
+	top: 20px;
+	width: 1000px;
+	z-index: 10;
+	border: 3px solid #008d97;
+	text-align: center;
+	padding: 10px;
+	display: none;
+}
+
+#nflexam-container {
+	position: absolute;
+	width: 100%;
+	margin-left: -2000px;
+}
+
+#nflexam-content {
+	position: absolute;
+	margin: 0 auto;
+	left: 0;
+	right: 0;
+	top: 20px;
+	width: 1000px;
+	z-index: 10;
+	border: 3px solid #773141;
+	padding: 50px;
+	font-size: 18px;
+}
+
+.section {
+	color: #008d97;
+	font-weight: 700;
+}
+
+.radio, .checkbox {
+	display: block;
+	min-height: 20px;
+	margin-top: 0px;
+	margin-bottom: 0px;
+	padding-left: 12px;
+	padding-right: 12px;
+	font-weight: normal;
+}
+
+.cats-list {
+	text-align: center;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.cats {
+	text-align: left;
+	font-size: 11px;
+}
+
+#nav-container {
+	width: 100%;
+	margin-top: 20px;
+	text-align: center;
+}
+
+#title-container {
+	float: left;
+}
+
+#labels-container {
+	text-align: center;
+	margin: 0 auto;
+}
+
+#new-container {
+}
+
+.graph-input {
+	display: none;
+}
+
+.ani-button {
+	width: 130px;
+	height: 45px;
+	overflow: hidden;
+	-webkit-transition: all 0.3s;
+	-webkit-transition-property: all;
+	-webkit-transition-duration: 0.3s;
+	-webkit-transition-timing-function: initial;
+	-webkit-transition-delay: initial;
+	-moz-transition: all 0.3s;
+	transition: all 0.3s;
+	transition-property: all;
+	transition-duration: 0.3s;
+	transition-timing-function: initial;
+	transition-delay: initial;
+	border: 3px solid #B20032;
+	border-radius: 0px;
+	background-color: #EEEEEE;
+	margin-left: 5px;
+	margin-right: 5px;
+	line-height: 23px;
+	font-size: 18px;
+	font-weight: 700;
+	color: #444444;
+}
+
+.ani-button:first-child {
+	margin-left: 0px;
+}
+
+.ani-button:last-child {
+	margin-right: 0px;
+}
+
+.ani-button.active {
+	color: #EEC607;
+	background-color: #B20032;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.ani-button:after {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	width: 100%;
+	height: 0;
+	top: 50%;
+	left: 50%;
+	background: #B20032;
+	opacity: 0;
+	content: '';
+	position: absolute;
+	z-index: -10;
+	-webkit-transition: all 0.3s;
+	-moz-transition: all 0.3s;
+	transition: all 0.3s;
+	-webkit-transform: translateX(-50%) translateY(-50%) rotate(45deg);
+	-moz-transform: translateX(-50%) translateY(-50%) rotate(45deg);
+	-ms-transform: translateX(-50%) translateY(-50%) rotate(45deg);
+	transform: translateX(-50%) translateY(-50%) rotate(45deg);
+}
+
+.ani-button:hover:after {
+	height: 260%;
+	opacity: 1;
+}
+
+.ani-button:active:after {
+	height: 400%;
+	opacity: 1;
+}
+
+.label-text {
+	font-weight: 700;
+}
+
+.nflexam-label {
+	color: #773141;
+}
+
+#nflexam-label {
+	margin: 0px 25px;
+	border: 3px solid #773141;
+}
+
+#nflexam-label:after {
+	background-color: #773141;
+}
+
+#nflexam-label.active {
+	background-color: #773141;
+}
+
+.new-label {
+	color: #008d97;
+}
+
+#new-label {
+	margin: 0px 25px;
+	border: 3px solid #008d97;
+}
+
+#new-label:after {
+	background-color: #008d97;
+}
+
+#new-label.active {
+	background-color: #008d97;
+}
+
+.go-label {
+	color: #008d97;
+}
+
+#go-label {
+	margin: 0px 25px;
+	border: 3px solid #008d97;
+}
+
+#go-label:after {
+	background-color: #008d97;
+}
+
+#go-label.active {
+	background-color: #008d97;
+}
+
+#go-label.active {
+	background-color: #EEEEEE;
+	color: #444444;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.total-scores {
+	color: #4F2682;
+}
+
+#total-scores {
+	border: 3px solid #4F2682;
+}
+
+#total-scores:after {
+	background-color: #4F2682;
+}
+
+#total-scores.active {
+	background-color: #4F2682;
+}
+
+.regression {
+	color: #5B92E5;
+}
+
+#regression {
+	border: 3px solid #5B92E5;
+}
+
+#regression:after {
+	background-color: #5B92E5;
+}
+
+#regression.active {
+	background-color: #5B92E5;
+}
+
+.explained {
+	color: #B20032;
+}
+
+#explained {
+	border: 3px solid #B20032;
+}
+
+#explained:after {
+	background-color: #B20032;
+}
+
+#explained.active {
+	background-color: #B20032;
+}
+
+.axis path,
+.axis line {
+	fill: none;
+	stroke: #CCCCCC;
+	shape-rendering: crispEdges;
+}
+
+.axis text {
+	font-family: sans-serif;
+	font-size: 11px;
+	fill: #444444;
+}
+
+.axis text {
+	font-family: sans-serif;
+	font-size: 11px;
+	fill: #444444;
+}
+
+.axis-title {
+	font-family: 'Segoe UI', 'Gotham Rounded A', sans-serif;
+	font-size: 14px;
+	fill: #444444;
+}
+
+#tips {
+	display: none;
+}
+
+.tips-content {
+	text-align: center;
+}
+
+.tips-content th {
+	text-align: center;
+}
+
+svg .explained {
+	fill: #EEC607;
+	stroke: #000000;
+	stroke-width: 0;
+}
+
+svg .ARI {
+	fill: #870619;
+	stroke: #000000;
+	stroke-width: 0;
+}
+
+svg .ATL {
+	fill: #BD0D18;
+	stroke: #000000;
+	stroke-width: 0;
+}
+
+svg .BAL {
+	fill: #280353;
+	stroke: #D0B240;
+	stroke-width: 0;
+}
+
+svg .BUF {
+	fill: #00338D;
+	stroke: #C60C30;
+	stroke-width: 0;
+}
+
+svg .CAR {
+	fill: #0088CE;
+	stroke: #000000;
+	stroke-width: 0;
+}
+
+svg .CHI {
+	fill: #DD4814;
+	stroke: #03202F;
+	stroke-width: 0;
+}
+
+svg .CIN {
+	fill: #FB4F14;
+	stroke: #000000;
+	stroke-width: 0;
+}
+
+svg .CLE {
+	fill: #E34912;
+	stroke: #26201E;
+	stroke-width: 0;
+}
+
+svg .DAL {
+	fill: #002244;
+	stroke: #8C8B8A;
+	stroke-width: 0;
+}
+
+svg .DEN {
+	fill: #FB4F14;
+	stroke: #002244;
+	stroke-width: 0;
+}
+
+svg .DET {
+	fill: #006DB0;
+	stroke: #C5C7CF;
+	stroke-width: 0;
+}
+
+svg .GB {
+	fill: #213D30;
+	stroke: #FFCC00;
+	stroke-width: 0;
+}
+
+svg .HOU {
+	fill: #02253A;
+	stroke: #B31B34;
+	stroke-width: 0;
+}
+
+svg .IND {
+	fill: #003B7B;
+	stroke: #FFFFFF;
+	stroke-width: 0;
+}
+
+svg .JAC {
+	fill: #D0B239;
+	stroke: #007198;
+	stroke-width: 0;
+}
+
+svg .KC {
+	fill: #B20032;
+	stroke: #F2C800;
+	stroke-width: 0;
+}
+
+svg .MIA {
+	fill: #008d97;
+	stroke: #F5811F;
+	stroke-width: 0;
+}
+
+svg .MIN {
+	fill: #4F2682;
+	stroke: #FFC52F;
+	stroke-width: 0;
+}
+
+svg .NE {
+	fill: #0D254C;
+	stroke: #C80815;
+	stroke-width: 0;
+}
+
+svg .NO {
+	fill: #D2B887;
+	stroke: #000000;
+	stroke-width: 0;
+}
+
+svg .NYG {
+	fill: #192F6B;
+	stroke: #CA001A;
+	stroke-width: 0;
+}
+
+svg .NYJ {
+	fill: #0C371D;
+	stroke: #FFFFFF;
+	stroke-width: 0;
+}
+
+svg .OAK {
+	fill: #000000;
+	stroke: #C4C8CB;
+	stroke-width: 0;
+}
+
+svg .PHI {
+	fill: #003B48;
+	stroke: #708090;
+	stroke-width: 0;
+}
+
+svg .PIT {
+	fill: #F2C800;
+	stroke: #000000;
+	stroke-width: 0;
+}
+
+svg .SD {
+	fill: #5B92E5;
+	stroke: #EEC607;
+	stroke-width: 0;
+}
+
+svg .SEA {
+	fill: #06192E;
+	stroke: #4EAE47;
+	stroke-width: 0;
+}
+
+svg .SF {
+	fill: #AF1E2C;
+	stroke: #E6BE8A;
+	stroke-width: 0;
+}
+
+svg .STL {
+	fill: #13264B;
+	stroke: #C9AF74;
+	stroke-width: 0;
+}
+
+svg .TB {
+	fill: #B20032;
+	stroke: #89765F;
+	stroke-width: 0;
+}
+
+svg .TEN {
+	fill: #648FCC;
+	stroke: #000080;
+	stroke-width: 0;
+}
+
+svg .WAS {
+	fill: #773141;
+	stroke: #FFB612;
+	stroke-width: 0;
+}
