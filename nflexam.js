@@ -4,49 +4,30 @@ var pg = require('pg');
 var async = require('async');
 
 console.log(process.env);
-console.log(__dirname);
 
 app.configure('development', function() {
 	app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 	app.use(express.compress());
+	app.set('path', '/dev/nflexam')
 	app.set('port', 2014);
-	app.use('/nflexam/template', express.static(__dirname + '/template'));
-	app.use('/nflexam/css', express.static(__dirname + '/css'));
-	app.use('/nflexam/js', express.static(__dirname + '/js'));
+	app.use('/dev/nflexam' + '/template', express.static(__dirname + '/template'));
+	app.use('/dev/nflexam' + '/css', express.static(__dirname + '/css'));
+	app.use('/dev/nflexam' + '/js', express.static(__dirname + '/js'));
 });
 
 app.configure('production', function() {
 	app.use(express.compress());
+	app.set('path', '/nflexam')
 	app.set('port', 2013);
 	app.use('/nflexam/template', express.static(__dirname + '/template'));
 	app.use('/nflexam/css', express.static(__dirname + '/css'));
 	app.use('/nflexam/js', express.static(__dirname + '/js'));
 });
 
-app.get('/nflexam', function(req, res) {
-	res.sendfile('index.html');
-});
+var path = app.get('path');
 
-app.get('/nflexam/query', function(req, res) {
-	var client = new pg.Client({
-		user: process.env.NFLEXAM_USER,
-		password: process.env.NFLEXAM_PASS,
-		database: 'nflexam',
-		host: 'localhost',
-		port: 5432
-	});
-	query_text = 'SELECT * FROM season_stat WHERE team = \'SEA\'';
-	client.connect();
-	var query = client.query(query_text);
-	query.on('row', function(row, result) {
-		result.addRow(row);
-	});
-	query.on('error', function() {
-		console.error('/nflexam/query error!');
-	});
-	query.on('end', function(result) {
-		res.send(result.rows);
-	});
+app.get(path + '/', function(req, res) {
+	res.sendfile('index.html');
 });
 
 var valid_year = function(year) {
@@ -65,7 +46,7 @@ var valid_cats = function(cats) {
 	return true;
 }
 
-app.get('/nflexam/pca', function(req, res) {
+app.get(path + '/pca', function(req, res) {
 	var year = req.query.year;
 	var cats = req.query.cat;
 	if (!valid_year(year) || !valid_cats(cats)) {
@@ -192,7 +173,7 @@ var async_select = function(query_text, callback) {
 	});
 }
 
-app.get('/nflexam/cat', function(req, res) {
+app.get(path + '/cat', function(req, res) {
 
 	var cat_queries = get_cat_queries();
 
