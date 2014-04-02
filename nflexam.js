@@ -3,10 +3,21 @@ var app = express();
 var pg = require('pg');
 var async = require('async');
 
-app.configure(function() {
+console.log(process.env);
+console.log(__dirname);
+
+app.configure('development', function() {
+	app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+	app.use(express.compress());
+	app.set('port', 2014);
+	app.use('/nflexam/template', express.static(__dirname + '/template'));
+	app.use('/nflexam/css', express.static(__dirname + '/css'));
+	app.use('/nflexam/js', express.static(__dirname + '/js'));
+});
+
+app.configure('production', function() {
 	app.use(express.compress());
 	app.set('port', 2013);
-	console.log(__dirname);
 	app.use('/nflexam/template', express.static(__dirname + '/template'));
 	app.use('/nflexam/css', express.static(__dirname + '/css'));
 	app.use('/nflexam/js', express.static(__dirname + '/js'));

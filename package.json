@@ -1,0 +1,11 @@
+{
+	"name": "nflexam",
+	"version": "0.0.1",
+	"author": "phillip <phillip.chen@hotmail.com>",
+	"description": "PCA analysis of NFL teams.",
+	"dependencies": {
+		"express": "3.x",
+		"pg": "2.x",
+		"async": "0.x"
+	}
+}
