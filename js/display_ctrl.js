@@ -1,6 +1,6 @@
 'use strict';
 
-function nflexam_ctrl($scope, nflexam_module) {
+function display_ctrl($scope, nflexam) {
 
 	// D3 height, width, margins and offset.
 	$scope.margin = {top: 40, bottom: 40, left: 45, right: 45};
@@ -12,6 +12,9 @@ function nflexam_ctrl($scope, nflexam_module) {
 	$scope.h = $(window).height() - $scope.margin.top - $scope.margin.bottom - $scope.h_off;
 	$scope.w = $(window).width() - $scope.margin.left - $scope.margin.right - $scope.w_off;
 	$scope.font_size = 18;
+	$scope.clock = 700;
+	$scope.display_count = 0;
+	$scope.reload_count = 0;
 
 	// Default stats.
 	$scope.num_teams = 32;
@@ -22,22 +25,14 @@ function nflexam_ctrl($scope, nflexam_module) {
 	$scope.linreg_dataset = [];
 	$scope.explained_dataset = [];
 	$scope.cur_dataset = [];
-	$scope.cats = ['passing_tds', 'rushing_tds'];
-	$scope.temp_cats = $scope.cats.slice(0);
-	$scope.year = 2013;
-	$scope.temp_year = 2013;
-	$scope.sections_cats = [];
-	$scope.cats_view = false;
-	$scope.nflexam_view = false;
-	$scope.titles = ['Total Scores', 'Regression', 'Explained'];
+	
 	$scope.x_titles = ['NFL Teams [Hover over team points for details!]', 'Calculated Rankings', 'Principal Component'];
 	$scope.y_titles = ['Total Scores', 'Draft Order', 'Percentage Variance'];
-	$scope.cur_title = $scope.titles[0];
-
+	
 	$scope.k = 0;
 	$scope.r_squared = 0;
 	$scope.total_explained = 0;
-	$scope.pc_cats = $scope.cats;
+	$scope.pc_cats = [];
 
 	// D3 scales, axes, elements, and misc.
 	$scope.x_scale;
@@ -53,68 +48,67 @@ function nflexam_ctrl($scope, nflexam_module) {
 	$scope.text_r;
 	$scope.text_k;
 	$scope.text_ee;
-	$scope.clock = 700;
-	$scope.count = 0;
 
-	nflexam_module.cat.query({},
-		function success(data) {
-			$scope.sections_cats = data;
-			$scope.pca_query(false);
-		},
-		function error() {
-			$("#d3-content").html("<div class=\"error\">Something went wrong. [. .]?</div>");
-	});
+	//Broadcasted events from labels_ctrl.
+	$scope.$on("pca_init", function() { $scope.pca_init(); });
+	$scope.$on("pca_reload", function() { $scope.pca_reload(); });
+	$scope.$on("d3_display", function() { $scope.d3_display(); });
+	$scope.$on("d3_switch", function() { $scope.d3_switch(); });
 
-	$scope.pca_query = function(reload) {
+	$scope.load_data = function(json) {
 
-		nflexam_module.pca.query({cat: $scope.cats, year: $scope.year},
+		var dataset = json.scores;
+		$scope.num_teams = dataset.length;
+		$scope.min_score = dataset[0].total_score;
+		$scope.max_score = dataset[$scope.num_teams-1].total_score;
+
+		$scope.k = json.k;
+		$scope.r_squared = json.r_squared;
+		$scope.max_explained = json.explained[0];
+		$scope.pc_cats = json.pc_cats;
+		
+		$scope.scores_dataset = dataset;
+		$scope.linreg_dataset = json.linreg;
+		$scope.explained_dataset = json.explained;
+
+		$scope.total_explained = 0;
+		for (var i = 0; i < $scope.k; i++) {
+			$scope.total_explained += $scope.explained_dataset[i];
+		}
+	}
+
+	$scope.pca_init = function() {
+
+		nflexam.pca.query({cat: nflexam.get_cats(), year: nflexam.get_year()},
 			function success(json) {
-				var dataset = json.scores;
-				$scope.num_teams = dataset.length;
-				$scope.min_score = dataset[0].total_score;
-				$scope.max_score = dataset[$scope.num_teams-1].total_score;
 
-				$scope.k = json.k;
-				$scope.r_squared = json.r_squared;
-				$scope.max_explained = json.explained[0];
-				$scope.pc_cats = json.pc_cats;
-				
-				$scope.scores_dataset = dataset;
-				$scope.linreg_dataset = json.linreg;
-				$scope.explained_dataset = json.explained;
+				$scope.load_data(json);
+				$scope.$emit("cats_init");
+				$scope.$emit("temp_init");
+				$scope.d3_update_dataset();
+				$scope.d3_display();
+				$(window).resize(function() {
+					$scope.d3_resize();
+				});
+			},
+			function error() {
+				$("#d3-content").html("<div class=\"error\">Something went wrong. [. . ]?</div>");
+			});
+	}
 
-				$scope.total_explained = 0;
-				for (var i = 0; i < $scope.k; i++) {
-					$scope.total_explained += $scope.explained_dataset[i];
-				}
+	$scope.pca_reload = function() {
 
-				$scope.load_tips();
+		nflexam.pca.query({cat: nflexam.get_cats(), year: nflexam.get_year()},
+			function success(json) {
 
-				if (!reload) {
-					$scope.cur_dataset = dataset;
+				$scope.load_data(json);
+				$scope.$emit("temp_init");
+				var cur_title = nflexam.get_cur_title();
+				var titles = nflexam.get_titles();
+				if (cur_title == titles[2]) {
 					$scope.d3_display();
-					$(window).resize(function() {
-						$scope.d3_resize();
-						$scope.assign_tips();
-					});
 				} else {
-					if ($scope.cur_title == $scope.titles[2]) {
-						$scope.d3_display();
-					} else {
-			    		$scope.d3_reload();
-					}
-				}
-
-				$scope.assign_tips();
-				$scope.temp_cats = $scope.cats.slice(0);
-				$scope.temp_year = $scope.year;
-				// Can't prop in cat query success for some reason.
-				if (!reload) {
-					for (var i = 0; i < $scope.cats.length; i++) {
-						$('#' + $scope.cats[i]).prop('checked', true);
-					}
-					$('#' + $scope.year).prop('checked', true);
-					$('#' + $scope.format_label($scope.cur_title)).addClass('active');
+		    		$scope.d3_reload();
 				}
 			},
 			function error() {
@@ -124,8 +118,10 @@ function nflexam_ctrl($scope, nflexam_module) {
 
 	$scope.d3_class = function(d) {
 
-		switch ($scope.cur_title) {
-			case $scope.titles[2]:
+		var cur_title = nflexam.get_cur_title();
+		var titles = nflexam.get_titles();
+		switch (cur_title) {
+			case titles[2]:
 				return "explained";
 			default:
 				return d.team_id + ' circle';
@@ -134,10 +130,12 @@ function nflexam_ctrl($scope, nflexam_module) {
 
 	$scope.d3_y = function(d) {
 
-		switch ($scope.cur_title) {
-			case $scope.titles[1]:
+		var cur_title = nflexam.get_cur_title();
+		var titles = nflexam.get_titles();
+		switch (cur_title) {
+			case titles[1]:
 				return $scope.y_scale(d.y);
-			case $scope.titles[2]:
+			case titles[2]:
 				return $scope.y_scale(d);
 			default:
 				return $scope.y_scale(d.total_score);
@@ -153,7 +151,6 @@ function nflexam_ctrl($scope, nflexam_module) {
 		}
 
 		//Empty old d3 graph, update height/width, and add dummy span to insert line before circles.
-		// $("#content-container").css({"width": $scope.w});
 		$("#d3-content").empty().css(container_css).append("<span id=\"first\"></span>");
 		$("#cats-content").css({"width": $scope.w});
 		$("#nflexam-content").css({"width": $scope.w});
@@ -161,8 +158,10 @@ function nflexam_ctrl($scope, nflexam_module) {
 
 	$scope.d3_update_scales = function() {
 
-		switch ($scope.cur_title) {
-			case $scope.titles[1]:
+		var cur_title = nflexam.get_cur_title();
+		var titles = nflexam.get_titles();
+		switch (cur_title) {
+			case titles[1]:
 				$scope.x_scale = d3.scale.linear()
 			    	.domain([0, $scope.num_teams-1])
 			    	.range([0, $scope.w]);
@@ -171,7 +170,7 @@ function nflexam_ctrl($scope, nflexam_module) {
 			    	.domain([0, $scope.num_teams-1])
 			    	.range([$scope.h, 0]);
 		    	break;
-	    	case $scope.titles[2]:;
+	    	case titles[2]:;
 	    		$scope.x_scale = d3.scale.linear()
 			    	.domain([0, $scope.k-1])
 			    	.range([0, $scope.w]);
@@ -193,8 +192,10 @@ function nflexam_ctrl($scope, nflexam_module) {
 
 	$scope.d3_update_axes = function() {
 
-		switch ($scope.cur_title) {
-			case $scope.titles[1]:
+		var cur_title = nflexam.get_cur_title();
+		var titles = nflexam.get_titles();
+		switch (cur_title) {
+			case titles[1]:
 		    	$scope.x_axis = d3.svg.axis()
 					.scale($scope.x_scale)
 					.orient("bottom")
@@ -207,7 +208,7 @@ function nflexam_ctrl($scope, nflexam_module) {
 					.ticks($scope.num_teams)
 					.tickFormat(function(i) { return $scope.linreg_dataset[i].draft_team; });
 		    	break;
-	    	case $scope.titles[2]:
+	    	case titles[2]:
 		    	$scope.x_axis = d3.svg.axis()
 					.scale($scope.x_scale)
 					.orient("bottom")
@@ -235,11 +236,14 @@ function nflexam_ctrl($scope, nflexam_module) {
 
 	$scope.d3_update_dataset = function() {
 
-		switch ($scope.cur_title) {
-			case $scope.titles[1]:
+		var cur_title = nflexam.get_cur_title();
+		var titles = nflexam.get_titles();
+
+		switch (cur_title) {
+			case titles[1]:
 				$scope.cur_dataset = $scope.linreg_dataset;
 		    	break;
-	    	case $scope.titles[2]:
+	    	case titles[2]:
 				$scope.cur_dataset = $scope.explained_dataset;
 		    	break;
 	    	default:
@@ -248,6 +252,7 @@ function nflexam_ctrl($scope, nflexam_module) {
 	}
 
 	$scope.d3_update_svg = function() {
+
 		$('#cats-container').css({"height": $scope.h, "width": $scope.w})
 		$scope.svg = d3.select("#d3-content")
 			.append("svg")
@@ -276,12 +281,15 @@ function nflexam_ctrl($scope, nflexam_module) {
 
 	$scope.d3_update_line = function(append, resize) {
 
+		var cur_title = nflexam.get_cur_title();
+		var titles = nflexam.get_titles();
 		if (append) {
 			$scope.line = $scope.svg.insert("svg:line", "#first")
 	    		.attr("stroke", "#BBBBBB")
 				.attr("stroke-width", 0);
 		}
-		if ($scope.cur_title == $scope.titles[1]) {
+
+		if (cur_title == titles[1]) {
 			$scope.line
 	    		.attr("x1", $scope.x_scale(0))
 	    		.attr("x2", $scope.x_scale($scope.num_teams-1))
@@ -307,6 +315,7 @@ function nflexam_ctrl($scope, nflexam_module) {
 	}
 
 	$scope.ie_ver = function() {  
+
 	    var iev=0;
 	    var ieold = (/MSIE (\d+\.\d+);/.test(navigator.userAgent));
 	    var trident = !!navigator.userAgent.match(/Trident\/7.0/);
@@ -391,16 +400,6 @@ function nflexam_ctrl($scope, nflexam_module) {
 	}
 
 	$scope.d3_update_titles = function(append) {
-		// $scope.svg.selectAll("#top-title").data([]).exit().remove()
-		// $scope.top_title = $scope.svg.append("text")
-		// 	.attr("x", $scope.w / 2)
-		// 	.attr("y", 0 - ($scope.margin.top / 2))
-		// 	.attr("id", "top-title")
-		// 	.attr("text-anchor", "middle")
-		// 	.style("font-size", "16px")
-
-		// $scope.top_title
-		// 	.text($scope.cur_title);
 
 		$scope.svg.selectAll("#x-title").data([]).exit().remove()
 		$scope.x_title = $scope.svg.append("text")
@@ -419,14 +418,16 @@ function nflexam_ctrl($scope, nflexam_module) {
 			.attr("text-anchor", "start")
 			.attr("transform", "rotate(-90)");
 
-		switch ($scope.cur_title) {
-			case $scope.titles[1]:
+		var cur_title = nflexam.get_cur_title();
+		var titles = nflexam.get_titles();
+		switch (cur_title) {
+			case titles[1]:
 				$scope.x_title
 					.text($scope.x_titles[1]);
 				$scope.y_title
 					.text($scope.y_titles[1]);
 				break;
-			case $scope.titles[2]:
+			case titles[2]:
 				$scope.x_title
 					.text($scope.x_titles[2]);
 				$scope.y_title
@@ -489,6 +490,15 @@ function nflexam_ctrl($scope, nflexam_module) {
 			.ease('quad-out')
 			.attr("cy", function(d) {
 				return $scope.d3_y(d);
+			})
+			.each('end', function() {
+				if ($scope.display_count < $scope.num_teams-1) {
+					$scope.display_count++;
+					return;
+				}
+				$scope.display_count = 0;
+				console.log($('#tips').html());
+				$scope.assign_tips();		
 			});
 	}
 
@@ -509,11 +519,11 @@ function nflexam_ctrl($scope, nflexam_module) {
 			.each('end', function() {
 
 				// Only execute transitions until after each circle is done.
-				if ($scope.count < $scope.num_teams-1) {
-					$scope.count++;
+				if ($scope.reload_count < $scope.num_teams-1) {
+					$scope.reload_count++;
 					return;
 				}
-				$scope.count = 0;
+				$scope.reload_count = 0;
 
 				$scope.circles	
 					.data($scope.cur_dataset)
@@ -533,11 +543,11 @@ function nflexam_ctrl($scope, nflexam_module) {
 						return 10;
 					}).each('end', function() {
 						// Only execute transitions until after each circle is done.
-						if ($scope.count < $scope.num_teams-1) {
-							$scope.count++;
+						if ($scope.reload_count < $scope.num_teams-1) {
+							$scope.reload_count++;
 							return;
 						}
-						$scope.count = 0;						
+						$scope.reload_count = 0;						
 						$scope.circles
 							.transition()
 							.duration($scope.clock)
@@ -546,16 +556,15 @@ function nflexam_ctrl($scope, nflexam_module) {
 							.attr("cy", function(d, i) {
 								return $scope.d3_y(d);
 							}).each('end', function() {
-								if ($scope.count < $scope.num_teams-1) {
-									$scope.count++;
+								if ($scope.reload_count < $scope.num_teams-1) {
+									$scope.reload_count++;
 									return;
 								}
-								$scope.count = 0;						
+								$scope.reload_count = 0;						
 								$scope.d3_update_line(false, false);
 								$scope.d3_update_legend();
-								// Band aid to force legend to refresh.
+								// Force legend to refresh, check out later.
 								$scope.d3_resize();
-
 								$scope.assign_tips();
 							});
 					});
@@ -583,6 +592,7 @@ function nflexam_ctrl($scope, nflexam_module) {
 			});
 
 		$scope.d3_update_line(false, false);
+		$scope.assign_tips();
 	}
 
 	$scope.d3_resize = function() {
@@ -617,33 +627,26 @@ function nflexam_ctrl($scope, nflexam_module) {
 			.attr("r", function(d) {
 				return 10;
 			});
-	}
 
-	$scope.load_tips = function() {
-
-		var tips = $('#tips').empty();
-		for (var i = 0; i < $scope.num_teams; i++) {
-			var t = $scope.scores_dataset[i];
-			var html = "";
-			html += "<div class=\"tips-content\" id=\"" + t.team_id + "\">";
-			html += "<table class=\"tips-content\">";
-			html += "<tr><th>PC#</th><th>Most Influential Stat</th><th>Score</th></tr>"
-			for (var j = 1; j <= $scope.scores_dataset[i].scores.length; j++) {
-				html += "<tr><td>PC" + j + "</td><td>" + $scope.format_cat($scope.pc_cats[j-1]) + "</td><td>" + $scope.scores_dataset[i].scores[j-1].toFixed(4) + "</td></tr>";
-			}
-			html += "<tr><td>Total Score</td><td>~</td><td>"  + $scope.scores_dataset[i].total_score.toFixed(4) + "</td></tr>";
-			html += "</table>";
-			html += "</div>";
-			tips.append(html);
-		}
+		$scope.assign_tips();
 	}
 
 	$scope.assign_tips = function() {
 
 		$('.circle').each(function(i) {
 			var id = $scope.scores_dataset[i].team_id;
+			var cur_title = nflexam.get_cur_title();
+			var titles = nflexam.get_titles();
+			var test;
+			switch (cur_title) {
+				case titles[1]: 
+					test = $scope.linreg_dataset[i].y <= ($scope.num_teams / 2);
+					break;
+				default:
+					test = $scope.scores_dataset[i].total_score <= 0;
+			}
 			// Temp fix to keep qtips in screen (can't figure out adjust: screen: true). Face down if high draft order.
-			if ($scope.linreg_dataset[i].y <= ($scope.num_teams / 2)) {
+			if (test) {
 				$(this).qtip({
 					content: {
 						text: $('#' + id).html(),
@@ -677,126 +680,6 @@ function nflexam_ctrl($scope, nflexam_module) {
 		});
 	}
 
-	$scope.tab_clicked = function(title) {
-
-		if ($scope.nflexam_view) {
-			$scope.nflexam_clicked(false);
-		}
-		if ($scope.cur_title == title) {
-			return;
-		}
-		if ($scope.titles[2] == title || $scope.cur_title == $scope.titles[2]) {
-			$scope.cur_title = title;
-			$scope.d3_display();
-			$scope.assign_tips();
-		} else {
-			$scope.cur_title = title;
-    		$scope.d3_switch();
-		}
-	}
-
-	$scope.nflexam_clicked = function(nflexam_label) {
-		
-		if (nflexam_label && $scope.nflexam_view) {
-			return;
-		}
-		if (!$scope.nflexam_view) {
-			$('#content-container').animate({marginLeft: "2000px"}, 350, function() {
-				$(this).hide();
-				$('#nflexam-container').show().animate({marginLeft: "0px"}, 350);	
-			});
-			$scope.nflexam_view = !$scope.nflexam_view;		
-		} else {
-			$('#nflexam-container').animate({marginLeft: "-2000px"}, 350, function() {
-				$(this).hide();
-				$("#nflexam-label").removeClass('active');
-				$('#' + $scope.format_label($scope.cur_title)).addClass('active');
-				$('#content-container').show().animate({marginLeft: "0px"}, 350, function() {
-					if (nflexam_label) {
-						$("#nflexam-label").removeClass('active');
-					}
-				});
-			});
-			$scope.nflexam_view = !$scope.nflexam_view;
-			//Container disappears if not stopped it for some reason. Examine later!
-		}
-	}
-
-	$scope.cats_clicked = function() {
-
-		if ($scope.nflexam_view) {
-			$scope.nflexam_clicked();
-		}
-		if ($scope.cats.length == 0) {
-			alert("Need at least one stat!");
-			return;
-		}
-		$scope.cats_view = !$scope.cats_view;
-		if ($scope.cats_view) {
-			$('#cats-content').slideDown(350);
-			$('#d3-content').fadeTo(350, 0.05);
-		} else {
-			$('#cats-content').slideUp(350);
-			$('#d3-content').fadeTo(350, 1);
-
-			//Have to sort since checkboxes may screw up order. Seems messy, but oh well for now.
-			if ($scope.cats.sort().toString() !== $scope.temp_cats.sort().toString()
-				|| $scope.temp_year != $scope.year) {
-				$scope.pca_query(true);
-			}
-		}
-	}
-
-	$scope.go_clicked = function() {
-
-		if ($scope.cats.length == 0) {
-			alert("Need at least one stat!");
-			return;
-		}
-		$scope.cats_clicked();
-		$('#new-label').removeClass('active');
-		$('#go-label').removeClass('active');
-	}
-
-	$scope.catbox_changed = function(cat, section) {
-
-		var idx = $.inArray(cat, $scope.cats);
-		if (idx > -1) {
-			$scope.cats.splice(idx, 1);
-			$('#' + section).prop('checked', false);
-		} else {
-			$scope.cats.push(cat);
-			if ($('.' + section + ':checked').length == $('.' + section).length) {
-				$('#' + section).prop('checked', true);
-			}
-		}
-	}
-
-	$scope.section_changed = function(section) {
-
-		if ($('#' + section).prop('checked')) {
-			$('.' + section).each(function() {
-				if ($scope.cats.indexOf($(this).attr('id')) < 0) {
-					$scope.cats.push($(this).attr('id'));
-				}
-			});
-			$('.' + section).prop('checked', true);
-		} else {
-			$('.' + section).each(function() {
-				var idx = $.inArray($(this).attr('id'), $scope.cats);
-				if (idx > -1) {
-					$scope.cats.splice(idx, 1);
-				}
-			});
-			$('.' + section).prop('checked', false);
-		}
-	}
-
-	$scope.year_changed = function(year) {
-
-		$scope.year = year;
-	}
-
 	$scope.team_name = function(team_id) {
 
 		if (typeof($scope.team_map[team_id]) == "undefined") {
@@ -810,12 +693,6 @@ function nflexam_ctrl($scope, nflexam_module) {
 		var cat_space = cat.replace(/_/g, ' ');
 		var formatted_cat = cat_space.replace(/\w\S*/g, function(txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
 		return formatted_cat;
-	}
-
-	$scope.format_label = function(id) {
-
-		var formatted_id = id.replace(/ /g, '-').toLowerCase();
-		return formatted_id;
 	}
 
 	$scope.team_map = {

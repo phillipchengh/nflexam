@@ -1,9 +1,9 @@
 'use strict';
 
-angular.module('nflexam_module', ['ngRoute', 'nflexam_services'])
+angular.module('nflexam', ['ngRoute', 'nflexam_services'])
 .config(function($routeProvider) {
 	// $locationProvider.html5Mode(true);
 	$routeProvider
-		.when('/', {templateUrl: 'template/d3_template.html', controller: nflexam_ctrl})
-		.otherwise({redirectTo: '\\/'});
+		.when('/', {templateUrl: 'template/d3_template.html', controller: labels_ctrl})
+		.otherwise({redirectTo: '/'});
 });

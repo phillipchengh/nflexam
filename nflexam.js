@@ -2,6 +2,8 @@ var express = require('express');
 var app = express();
 var pg = require('pg');
 var async = require('async');
+var fs = require('fs');
+var dust = require('dustjs-linkedin');
 
 console.log(process.env);
 
@@ -27,7 +29,13 @@ app.configure('production', function() {
 var path = app.get('path');
 
 app.get(path + '/', function(req, res) {
-	res.sendfile('index.html');
+	fs.readFile("index.dust", function(error, file) {
+		var fn = dust.compileFn(file.toString(), "index");
+		fn({path: path}, function(error, out) {
+			res.send(out);
+		});
+	})
+	// res.sendfile('index.html');
 });
 
 var valid_year = function(year) {

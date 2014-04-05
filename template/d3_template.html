@@ -18,49 +18,59 @@
 	<div id="new-container">
 	</div>
 </div>
-<div id="nflexam-container">
-	<div id="nflexam-content">
-		<h1><span class="label-text nflexam-label">nflexam</span></h1>
-		<p><span class="label-text nflexam-label">nflexam</span> examines NFL team statistics! It uses Principal Component Analysis (PCA) to determine scores based on each team's regular season stats. You can specify which stat categories using <span class="label-text new-label">New Data</span>.</p>
-		<ul>
-			<li><span class="label-text total-scores">Total Scores:</span> PCA calculated score to quantify each team's performance with one number. This is based on my admittedly simple ranking of adding or subtracting each PC's projection. An opp headed stat signifies the quantity that the team allowed (I.E. Opp Passing Yds = Passing Yds team allowed from all opponents).</li>
-			<li><span class="label-text regression">Regression:</span> Comparison with the NFL draft order that year to illustrate how well the stat categories reflect actual performance. An accurate representation has an R&sup2 close to 1.</li>
-			<li><span class="label-text explained">Explained:</span> How much each Principal Component (PC) explains the data variance in percent. Only the components that explain at least 1% variance are used (k number of components).</li>
-			<li><span class="label-text raw">Raw:</span> You can also query stats using /nflexam/pca?year=YEAR&cat=CATEGORY1&cat=CATEGORY2... but don't expect me to handle heavy requests! Note that CATEGORY is lower cased and underscored.</li>
-		</ul>
-		<p>The PCA calculations are computed via numpy python and the data is extracted from <a href="https://github.com/BurntSushi/nfldb">nfldb</a>. You can check out the exact code over <a href="https://github.com/phillipchengh/nflexam">there</a>! Let me know about errors!</p>
-	</div>
-</div>
-<div id="content-container">
-	<div id="cats-content">
-		<form>
-			<div class="cats-list" ng-repeat="section_cats in sections_cats.sections">
-				<span class="section"><input id="{{section_cats.section}}" class="section-box" type="checkbox" ng-click="section_changed(section_cats.section)"> {{section_cats.section}}<br></span>
-				<div class="cats">
-					<div ng-repeat="cat in section_cats.cats">
-						<label class="checkbox" for="{{cat}}">
-							<input class="{{section_cats.section}}" id="{{cat}}" type="checkbox" ng-click="catbox_changed(cat, section_cats.section)"> {{format_cat(cat)}}
-						</label>
-					</div>
-				</div> 
-			</div>
-			<div class="cats-list">
-				<span class="section">Year<br></span>
-				<div class="cats">
-					<div ng-repeat="year in sections_cats.years">
-						<label class="radio" for="{{year}}">
-							<input id="{{year}}" name="year" type="radio" ng-click="year_changed(year)"> {{year}}
-						</label>
-					</div>
-				</div> 
-			</div>
-		</form>
-		<div class="btn-group" data-toggle="buttons">
-			<button id="go-label" class="btn ani-button" ng-click="go_clicked()">Go!</button>
+	<div id="nflexam-container">
+		<div id="nflexam-content">
+			<h1><span class="label-text nflexam-label">nflexam</span></h1>
+			<p><span class="label-text nflexam-label">nflexam</span> examines NFL team statistics! It uses Principal Component Analysis (PCA) to determine scores based on each team's regular season stats. You can specify which stat categories using <span class="label-text new-label">New Data</span>.</p>
+			<ul>
+				<li><span class="label-text total-scores">Total Scores:</span> PCA calculated score to quantify each team's performance with one number. This is based on my admittedly simple ranking of adding or subtracting each PC's projection. An opp headed stat signifies the quantity that the team allowed (I.E. Opp Passing Yds = Passing Yds team allowed from all opponents).</li>
+				<li><span class="label-text regression">Regression:</span> Comparison with the NFL draft order that year to illustrate how well the stat categories reflect actual performance. An accurate representation has an R&sup2 close to 1.</li>
+				<li><span class="label-text explained">Explained:</span> How much each Principal Component (PC) explains the data variance in percent. Only the components that explain at least 1% variance are used (k number of components).</li>
+				<li><span class="label-text raw">Raw:</span> You can also query stats using /nflexam/pca?year=YEAR&cat=CATEGORY1&cat=CATEGORY2... but don't expect me to handle heavy requests! Note that CATEGORY is lower cased and underscored.</li>
+			</ul>
+			<p>The PCA calculations are computed via numpy python and the data is extracted from <a href="https://github.com/BurntSushi/nfldb">nfldb</a>. You can check out the exact code over <a href="https://github.com/phillipchengh/nflexam">there</a>! Let me know about errors!</p>
 		</div>
 	</div>
-	<div id="d3-content">
+<span ng-controller="display_ctrl">
+	<div id="content-container">
+		<div id="cats-content">
+			<form>
+				<div class="cats-list" ng-repeat="section_cats in sections_cats.sections">
+					<span class="section"><input id="{{section_cats.section}}" class="section-box" type="checkbox" ng-click="section_changed(section_cats.section)"> {{section_cats.section}}<br></span>
+					<div class="cats">
+						<div ng-repeat="cat in section_cats.cats">
+							<label class="checkbox" for="{{cat}}">
+								<input class="{{section_cats.section}}" id="{{cat}}" type="checkbox" ng-click="catbox_changed(cat, section_cats.section)"> {{format_cat(cat)}}
+							</label>
+						</div>
+					</div> 
+				</div>
+				<div class="cats-list">
+					<span class="section">Year<br></span>
+					<div class="cats">
+						<div ng-repeat="year in sections_cats.years">
+							<label class="radio" for="{{year}}">
+								<input id="{{year}}" name="year" type="radio" ng-click="year_changed(year)"> {{year}}
+							</label>
+						</div>
+					</div> 
+				</div>
+			</form>
+			<div class="btn-group" data-toggle="buttons">
+				<button id="go-label" class="btn ani-button" ng-click="go_clicked()">Go!</button>
+			</div>
+		</div>
+		<div id="d3-content">
+		</div>
+		<div id="tips">
+			<div class="tips-content" ng-repeat="team in scores_dataset" id="{{team.team_id}}">
+				<table class="tips-content">
+					<tr><th>PC#</th><th>Most Influential Stat</th><th>Score</th></tr>
+					<tr ng-repeat="scores in team.scores"><td>PC{{$index+1}}</td><td>{{format_cat(pc_cats[$index])}}</td><td>{{scores.toFixed(4)}}</td></tr>
+					<tr><td>Total Score</td><td>~</td><td>{{team.total_score.toFixed(4)}}</td></tr>
+				</table>
+			</div>
+		</div>
 	</div>
-</div>
-<div id="tips"></div>
+</span>
 </span>

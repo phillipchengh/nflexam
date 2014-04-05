@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html ng-app="nflexam">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>nflexam</title>
+	<link rel="stylesheet" href="//cdn.jsdelivr.net/qtip2/2.2.0/jquery.qtip.min.css" />
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="{path}/css/style.css" />
+ 	<script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>	
+	<script type="text/javascript" src="{path}/js/angular.min.js"></script>
+	<script type="text/javascript" src="{path}/js/angular-resource.min.js"></script>
+	<script type="text/javascript" src="{path}/js/angular-route.min.js"></script>
+	<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="//d3js.org/d3.v3.min.js"></script>
+	<script type="text/javascript" src="{path}/js/jquery.qtip.min.js"></script>
+    <script type="text/javascript" src="{path}/js/app.js"></script>
+    <script type="text/javascript" src="{path}/js/services.js"></script>
+    <script type="text/javascript" src="{path}/js/labels_ctrl.js"></script>
+    <script type="text/javascript" src="{path}/js/display_ctrl.js"></script>
+</head>
+<body>
+	<div ng-view></div>
+</body>
+</html>
