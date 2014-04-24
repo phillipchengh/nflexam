@@ -497,7 +497,6 @@ function display_ctrl($scope, nflexam) {
 					return;
 				}
 				$scope.display_count = 0;
-				console.log($('#tips').html());
 				$scope.assign_tips();		
 			});
 	}

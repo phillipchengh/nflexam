@@ -10,7 +10,7 @@ console.log(process.env);
 app.configure('development', function() {
 	app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 	app.use(express.compress());
-	app.set('path', '/dev/nflexam')
+	app.set('path', '/dev/nflexam');
 	app.set('port', 2014);
 	app.use('/dev/nflexam' + '/template', express.static(__dirname + '/template'));
 	app.use('/dev/nflexam' + '/css', express.static(__dirname + '/css'));
@@ -19,7 +19,7 @@ app.configure('development', function() {
 
 app.configure('production', function() {
 	app.use(express.compress());
-	app.set('path', '/nflexam')
+	app.set('path', '/nflexam');
 	app.set('port', 2013);
 	app.use('/nflexam/template', express.static(__dirname + '/template'));
 	app.use('/nflexam/css', express.static(__dirname + '/css'));
@@ -34,25 +34,23 @@ app.get(path + '/', function(req, res) {
 		fn({path: path}, function(error, out) {
 			res.send(out);
 		});
-	})
-	// res.sendfile('index.html');
+	});
 });
 
 var valid_year = function(year) {
 	int_year = parseInt(year);
-	if (isNaN(int_year) || int_year % 1 != 0) {
+	if (isNaN(int_year) || int_year % 1 !== 0) {
 		return false;
 	}
 	return true;
-}
+};
 
 var valid_cats = function(cats) {
 	if (typeof cats == 'undefined' || cats.length < 1) {
-		console.log(cats)
 		return false;
 	}
 	return true;
-}
+};
 
 app.get(path + '/pca', function(req, res) {
 	var year = req.query.year;
@@ -69,17 +67,15 @@ app.get(path + '/pca', function(req, res) {
 	data = '';
 
 	python.stdout.on('data', function(chunk) {
-		console.log('stdout: ' + chunk);
 		data += chunk;
 	});
 
 	python.stderr.on('data', function(error) {
-		console.log('stderr: ' + error);
 	});
 
 	python.on('close', function(code) {
-		console.log('process exited with: ' + code)
-		if (code == 0) {
+		console.log('process exited with: ' + code);
+		if (code === 0) {
 			res.header('Content-Type', 'application/json');
 			res.send(JSON.parse(data));
 		} else {
@@ -108,10 +104,9 @@ var pg_select = function(query_text) {
 		console.error('Cat get error!');
 	});
 	query.on('end', function(result) {
-		console.log('query results: ' + result.rows);
 		return result.rows;
 	});
-}
+};
 
 var get_cat_queries = function() {
 
@@ -153,8 +148,8 @@ var get_cat_queries = function() {
 			AND column_name ~ \'^rushing.*\' \
 			ORDER BY column_name;"
 		]
-	}
-}
+	};
+};
 
 var async_select = function(query_text, callback) {
 
@@ -179,15 +174,15 @@ var async_select = function(query_text, callback) {
 	query.on('end', function(result) {
 		callback(null, result.rows);
 	});
-}
+};
 
 app.get(path + '/cat', function(req, res) {
 
 	var cat_queries = get_cat_queries();
 
-	async.map(cat_queries.queries, async_select, function(err, results) {
-		if (err) {
-			console.error('async err:' + err);
+	async.map(cat_queries.queries, async_select, function(error, results) {
+		if (error) {
+			console.error('async error:' + error);
 			res.send([]);
 		} else {
 			var json = {};
@@ -200,12 +195,12 @@ app.get(path + '/cat', function(req, res) {
 					cats.push(r[j].column_name);
 				}
 				sections.push({
-					"section": cat_queries.sections[i],
-					"cats": cats
+					'section': cat_queries.sections[i],
+					'cats': cats
 				});
 			}
 
-			json["sections"] = sections;
+			json['sections'] = sections;
 
 			var client = new pg.Client({
 				user: process.env.NFLEXAM_USER,
@@ -216,7 +211,7 @@ app.get(path + '/cat', function(req, res) {
 			});
 
 			client.connect();
-			var query = client.query("SELECT DISTINCT year FROM season_stat ORDER BY year DESC;");
+			var query = client.query('SELECT DISTINCT year FROM season_stat ORDER BY year DESC;');
 
 			query.on('row', function(row, result) {
 				result.addRow(row);
