@@ -34,20 +34,22 @@ function display_ctrl($scope, nflexam) {
 	$scope.total_explained = 0;
 	$scope.pc_cats = [];
 
-	// D3 scales, axes, elements, and misc.
-	$scope.x_scale;
-	$scope.y_scale;
-	$scope.x_axis;
-	$scope.y_axis;
-	$scope.svg;
-	$scope.circles;
-	$scope.line;
-	$scope.legend;
-	$scope.rect;
-	$scope.text_e;
-	$scope.text_r;
-	$scope.text_k;
-	$scope.text_ee;
+	// D3 scales, axes, elements, and misc.... for reference.
+	// $scope.x_scale;
+	// $scope.y_scale;
+	// $scope.x_axis;
+	// $scope.y_axis;
+	// $scope.svg;
+	// $scope.circles;
+	// $scope.line;
+	// $scope.legend;
+	// $scope.rect;
+	// $scope.text_e;
+	// $scope.text_r;
+	// $scope.text_k;
+	// $scope.text_ee;
+	// $scope.spinner;
+	// $scope.spin_element;
 
 	//Broadcasted events from labels_ctrl.
 	$scope.$on("pca_init", function() { $scope.pca_init(); });
@@ -79,9 +81,40 @@ function display_ctrl($scope, nflexam) {
 
 	$scope.pca_init = function() {
 
+		// Bandaid solution to implement spinner... look into angular method (interceptors?) later
+		var container_css = {
+			"height": $scope.h + $scope.margin.top + $scope.margin.bottom + "px",
+			"width": $scope.w + $scope.margin.left + $scope.margin.right + "px",
+			"margin": "0px auto"
+		};
+
+		//Empty old d3 graph, update height/width, and add dummy span to insert line before circles.
+		$("#d3-content").css(container_css);
+
+		var opts = {
+			lines: 13, // The number of lines to draw
+			length: 20, // The length of each line
+			width: 10, // The line thickness
+			radius: 30, // The radius of the inner circle
+			corners: 1, // Corner roundness (0..1)
+			rotate: 0, // The rotation offset
+			direction: 1, // 1: clockwise, -1: counterclockwise
+			color: '#000', // #rgb or #rrggbb or array of colors
+			speed: 1, // Rounds per second
+			trail: 60, // Afterglow percentage
+			shadow: false, // Whether to render a shadow
+			hwaccel: false, // Whether to use hardware acceleration
+			className: 'spinner', // The CSS class to assign to the spinner
+			zIndex: 2e9, // The z-index (defaults to 2000000000)
+		};
+	
+		var spin_element = document.getElementById('d3-content');
+		$scope.spinner = new Spinner(opts).spin(spin_element);
+
 		nflexam.pca.query({cat: nflexam.get_cats(), year: nflexam.get_year()},
 			function success(json) {
 
+				$scope.spinner.stop();
 				$scope.load_data(json);
 				$scope.$emit("cats_init");
 				$scope.$emit("temp_init");
@@ -148,7 +181,7 @@ function display_ctrl($scope, nflexam) {
 			"height": $scope.h + $scope.margin.top + $scope.margin.bottom + "px",
 			"width": $scope.w + $scope.margin.left + $scope.margin.right + "px",
 			"margin": "0px auto"
-		}
+		};
 
 		//Empty old d3 graph, update height/width, and add dummy span to insert line before circles.
 		$("#d3-content").empty().css(container_css).append("<span id=\"first\"></span>");
@@ -637,6 +670,7 @@ function display_ctrl($scope, nflexam) {
 			var cur_title = nflexam.get_cur_title();
 			var titles = nflexam.get_titles();
 			var test;
+			// Test if y coordinate is top or bot half, then point the qtip the opposite direction.
 			switch (cur_title) {
 				case titles[1]: 
 					test = $scope.linreg_dataset[i].y <= ($scope.num_teams / 2);
@@ -644,7 +678,6 @@ function display_ctrl($scope, nflexam) {
 				default:
 					test = $scope.scores_dataset[i].total_score <= 0;
 			}
-			// Temp fix to keep qtips in screen (can't figure out adjust: screen: true). Face down if high draft order.
 			if (test) {
 				$(this).qtip({
 					content: {

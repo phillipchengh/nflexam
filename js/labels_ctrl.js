@@ -34,10 +34,9 @@ function labels_ctrl($scope, nflexam) {
 			
 			$scope.sections_cats = data;
 			$scope.$broadcast("pca_init");
-			// $scope.pca_query(false);
 		},
 		function error() {
-			$("#d3-content").html("<div class=\"error\">Something went wrong. [. .]?</div>");
+			$("#d3-content").html("<div class=\"error\">Something went wrong. [. .]? Try refreshing.</div>");
 	});
 
 	$scope.tab_clicked = function(title) {
